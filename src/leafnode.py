@@ -4,10 +4,8 @@ from htmlnode import HTMLNode
 
 class LeafNode(HTMLNode):
     
-    def __init__(self, value: str, tag: str = None, 
-                 children: list = None, props: dict = None):
-        super().__init__(tag, value, children, props)
-
+    def __init__(self, tag: str, value: str, props: dict = None):
+        super().__init__(tag, value, None, props)
 
     def __repr__(self):
         return f"HTMLNode({self.tag}, {self.value}, {self.children}, {self.props})"

@@ -2,7 +2,7 @@ import unittest
 
 from parentnode import ParentNode
 from leafnode import LeafNode
-
+    
 class TestParentNode(unittest.TestCase):
     def test_single_child(self):
         leaf1 = LeafNode("b","Greetings!")
@@ -30,6 +30,23 @@ class TestParentNode(unittest.TestCase):
             parent1.to_html(),
             "<body><h1>Search</h1><p>You can search the internet <a href=\"google.com\">here</a></p></body>"
         )
+
+    def test_exceptions(self):
+        def test_raise(object, exception: Exception, function, exception_message):
+            object.assertRaises(exception, function)
+            try:
+                function()
+            except exception as e:
+                object.assertEqual(str(e), exception_message)
+
+        leaf = LeafNode("p", "Irrelevant")
+        node = ParentNode(None, [leaf])
+        test_raise(self, ValueError, node.to_html, "No tag set")
+        node = ParentNode("h1", None) 
+        test_raise(self, ValueError, node.to_html, "No children set")
+        node = ParentNode("h2", [])
+        test_raise(self, ValueError, node.to_html, "Empty children list")
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -14,8 +14,10 @@ class ParentNode(HTMLNode):
     def to_html(self):
         if self.tag == None:
             raise ValueError("No tag set")
-        if self.children == None or len(self.children) == 0:
-            raise ValueError("No children tags")
+        if self.children == None:
+            raise ValueError("No children set")
+        if len(self.children) == 0:
+            raise ValueError("Empty children list")
         inner_html = ""
         for tag in self.children:
             inner_html += tag.to_html()

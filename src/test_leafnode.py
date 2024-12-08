@@ -46,5 +46,17 @@ class TestLeafNode(unittest.TestCase):
         node = LeafNode(None, "What if I tag this?", {"size":"large"})
         self.assertEqual(node.to_html(), "What if I tag this?")
 
+    def test_exceptions(self):
+        def test_raise(object, exception: Exception, function, exception_message):
+            object.assertRaises(exception, function)
+            try:
+                function()
+            except exception as e:
+                object.assertEqual(str(e), exception_message)
+
+        node = LeafNode("p", None)
+        test_raise(self, ValueError, node.to_html, "No value set")
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -43,32 +43,35 @@ class TestNodeFunctions(unittest.TestCase):
             text_node_to_html_node(text_node)
         except ValueError as e:
             self.assertEqual(str(e), "Unrecognised type")
-            
+
+
+    def test_split_nodes(self):
+        message = "This is text with a **bolded phrase** in the middle"
+        input = TextNode(message, TextType.NORMAL)
+        output = split_nodes_delimiter([input], "**", TextType.BOLD)
+        # print("")
+        # print("Input:", input)
+        # print("Output:",output)
+
+    def test_split_nodes_long(self):
+        message = "Hi *there* how *are you?* I *am *well *!!!"
+        input = TextNode(message, TextType.NORMAL)
+        output = split_nodes_delimiter([input], "*", TextType.ITALIC)
+        # print("")
+        # print("Input:", input)
+        # print("Output:",output)
     
-    # def test_empty(self):
-    #     node = HTMLNode()
-    #     self.assertEqual(node.tag, None)
-    #     self.assertEqual(node.value, None)
-    #     self.assertEqual(node.children, None)
-    #     self.assertEqual(node.props, None)
-
-    # def test_not_equal(self):
-    #     node = HTMLNode("p", "Test", props={"style":"color:green"})
-    #     node2 = HTMLNode("h1", "Test", props={"style":"color:green"})
-    #     self.assertNotEqual(node, node2)
-
-    # def test_props(self):
-    #     node = HTMLNode("p", "Test", props={"style":"color:green"})
-    #     expected = f" style=\"color:green\""
-    #     actual = node.props_to_html()
-    #     self.assertEqual(expected,  actual)
-    
-    # def test_props_none(self):
-    #     node = HTMLNode("p", "Test")
-    #     expected = ""
-    #     actual = node.props_to_html()
-    #     self.assertEqual(expected, actual)
-
+    def test_split_nodes_different(self):
+        message = "**Bold**Normal``Code``*Italic***bold**"
+        input = TextNode(message, TextType.NORMAL)
+        output = split_nodes_delimiter([input], "**", TextType.BOLD)
+        output2 = split_nodes_delimiter(output, "*", TextType.ITALIC)
+        output3 = split_nodes_delimiter(output2, "``", TextType.CODE)
+        # print("")
+        # print("Input:", input)
+        # print("Output:",output)
+        # print("Output2:",output2)
+        # print("Output3:",output3)
 
 if __name__ == "__main__":
     unittest.main()

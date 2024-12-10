@@ -53,11 +53,26 @@ def split_nodes_delimiter(old_nodes: list[TextNode], delimiter: str, text_type: 
 import re
 
 def extract_markdown_images(text: str) -> list[tuple]:
-    search = r"!\[(.*?)\]\((.*?)\)"
+    search = r"\[([^\[\]]*)\]\(([^\(\)]*)\)"
     matches = re.findall(search, text)
     return matches
 
 def extract_markdown_links(text: str) -> list[tuple]:
-    search = r"\[(.*?)\]\((.*?)\)"
+    # Regex Breakdown (reference https://regexr.com/)
+    # (?<!                  | Negative Lookbehind -> If this group matches, don't match rest of expression.
+    #     !                 | If starts with !, this is an image, not link.
+    # )                     |
+    # \[                    | Match a literal [
+    #     (                 | Start group #1 - if multiple groups in expression, return of findall is list of tuples with all groups
+    #         [             | Start of a set of characters to match
+    #             ^\[\]*    | Matching rule: ^=Not, so match anything that isn't []. 
+    # ])\]                  |   * = match zero or more times.
+    # \[                    |
+    #     (                 | Start group #2
+    #         [             |   
+    #             ^\(\)*    |
+    # ])\]                  |
+
+    search = r"(?<!!)\[([^\[\]]*)\]\(([^\(\)]*)\)"
     matches = re.findall(search, text)
     return matches

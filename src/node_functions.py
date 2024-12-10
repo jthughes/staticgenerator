@@ -49,3 +49,15 @@ def split_nodes_delimiter(old_nodes: list[TextNode], delimiter: str, text_type: 
         # Insufficient remaining breaks to have properly tagged segement
         new_nodes.append(TextNode(search_string[index:], TextType.NORMAL)) 
     return new_nodes
+
+import re
+
+def extract_markdown_images(text: str) -> list[tuple]:
+    search = r"!\[(.*?)\]\((.*?)\)"
+    matches = re.findall(search, text)
+    return matches
+
+def extract_markdown_links(text: str) -> list[tuple]:
+    search = r"\[(.*?)\]\((.*?)\)"
+    matches = re.findall(search, text)
+    return matches

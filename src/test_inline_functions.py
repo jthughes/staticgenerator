@@ -97,11 +97,42 @@ class TestExtractMarkdownImages(unittest.TestCase):
 
 class TestSplitNodesImage(unittest.TestCase):
     def test_split_simple_image(self):
-        node = TextNode("Test ![Image](cat.png)")
+        node = TextNode("![Image](cat.png)", TextType.NORMAL)
         output = split_nodes_image([node])
+        self.assertEqual(len(output), 1)
+        self.assertEqual(str(output[0]), "TextNode(Image, image, cat.png)")
+
+    def test_split_simple_image_1(self):
+        node = TextNode("Test ![Image](cat.png)", TextType.NORMAL)
+        output = split_nodes_image([node])
+        print(f"\n\n{output}\n\n")
         self.assertEqual(len(output), 2)
         self.assertEqual(str(output[0]), "TextNode(Test , normal, None)")
         self.assertEqual(str(output[1]), "TextNode(Image, image, cat.png)")
+
+    def test_split_simple_image_2(self):
+        node = TextNode("Test ![Image](cat.png) image ![img2](dog.png)![img3](fish.png)blah", TextType.NORMAL)
+        output = split_nodes_image([node])
+        self.assertEqual(len(output), 6)
+        self.assertEqual(str(output[0]), "TextNode(Test , normal, None)")
+        self.assertEqual(str(output[1]), "TextNode(Image, image, cat.png)")
+        self.assertEqual(str(output[2]), "TextNode( image , normal, None)")
+        self.assertEqual(str(output[3]), "TextNode(img2, image, dog.png)")
+        self.assertEqual(str(output[4]), "TextNode(img3, image, fish.png)")
+        self.assertEqual(str(output[5]), "TextNode(blah, normal, None)")
+
+    def test_split_image_wrong_type(self):
+        node = TextNode("Test", TextType.BOLD)
+        output = split_nodes_image([node])
+        self.assertEqual(len(output), 1)
+        self.assertEqual(output[0], node)
+
+    def test_split_image_with_link(self):
+        node = TextNode("[hi](google.com)", TextType.NORMAL)
+        output = split_nodes_image([node])
+        self.assertEqual(len(output), 1)
+        self.assertEqual(output[0], node)
+
         
 
 
@@ -148,11 +179,45 @@ class TestExtractMarkdownLinks(unittest.TestCase):
 
 class TestSplitNodesLink(unittest.TestCase):
     def test_split_simple_link(self):
-        node = TextNode("Test [Link](boot.dev)")
-        output = split_nodes_image([node])
+        node = TextNode("[Link](boot.dev)", TextType.NORMAL)
+        output = split_nodes_link([node])
+        self.assertEqual(len(output), 1)
+        self.assertEqual(str(output[0]), "TextNode(Link, link, boot.dev)")
+
+    def test_split_simple_link_1(self):
+        node = TextNode("Test [Link](boot.dev)", TextType.NORMAL)
+        output = split_nodes_link([node])
         self.assertEqual(len(output), 2)
         self.assertEqual(str(output[0]), "TextNode(Test , normal, None)")
         self.assertEqual(str(output[1]), "TextNode(Link, link, boot.dev)")
+
+    def test_split_simple_link_2(self):
+        node = TextNode("Test [Link](boot.dev)[Link2](google.com)", TextType.NORMAL)
+        output = split_nodes_link([node])
+        self.assertEqual(len(output), 3)
+        self.assertEqual(str(output[0]), "TextNode(Test , normal, None)")
+        self.assertEqual(str(output[1]), "TextNode(Link, link, boot.dev)")
+        self.assertEqual(str(output[2]), "TextNode(Link2, link, google.com)")
+
+    def test_split_deceptive_link(self):
+        node = TextNode("Test ![Link](boot.dev)[Link](boot.dev)![Link](boot.dev) Blah", TextType.NORMAL)
+        output = split_nodes_link([node])
+        self.assertEqual(len(output), 3)
+        self.assertEqual(str(output[0]), "TextNode(Test ![Link](boot.dev), normal, None)")
+        self.assertEqual(str(output[1]), "TextNode(Link, link, boot.dev)")
+        self.assertEqual(str(output[2]), "TextNode(![Link](boot.dev) Blah, normal, None)")
+
+    def test_split_link_empty(self):
+        node = TextNode("Hey!", TextType.NORMAL)
+        output = split_nodes_link([node])
+        self.assertEqual(len(output), 1)
+        self.assertEqual(output[0], node)
+
+    def test_split_link_no_text(self):
+        node = TextNode("Hey!", TextType.BOLD)
+        output = split_nodes_link([node])
+        self.assertEqual(len(output), 1)
+        self.assertEqual(output[0], node)
 
 if __name__ == "__main__":
     unittest.main()

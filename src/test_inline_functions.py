@@ -53,7 +53,7 @@ class TestSplitNodesDelimiter(unittest.TestCase):
         self.assertEqual(str(output[5]), "TextNode(bold, bold, None)")
 
 
-class TestSplitNodesImage(unittest.TestCase):
+class TestExtractMarkdownImages(unittest.TestCase):
     def test_extract_markdown_images(self):
         text = "This is text with a ![rick roll](https://i.imgur.com/aKaOqIh.gif) and ![obi wan](https://i.imgur.com/fJRm4Vk.jpeg)"
         output = extract_markdown_images(text)
@@ -66,10 +66,46 @@ class TestSplitNodesImage(unittest.TestCase):
         output = extract_markdown_images(text)
         self.assertEqual(len(output), 1)
         self.assertTupleEqual(output[0], ('image', 'https://i.imgur.com/aKaOqIh.gif'))
+
+    def test_extract_markdown_images_no_alt(self):
+        text = "Test ![](boot.jpg)"
+        output = extract_markdown_images(text)
+        self.assertEqual(len(output), 1)
+        self.assertTupleEqual(output[0], ('', 'boot.jpg'))
+    
+    def test_extract_markdown_images_no_src(self):
+        text = "Test ![alt]()"
+        output = extract_markdown_images(text)
+        self.assertEqual(len(output), 0)
+    
+    def test_extract_markdown_images_empty(self):
+        text = "Test ![]()"
+        output = extract_markdown_images(text)
+        self.assertEqual(len(output), 0)
+
+    def test_extrac_markdown_images_nested(self):
+        text = "This ![![image](https://i.imgur.com/aKaOqIh.gif)](a.b)"
+        output = extract_markdown_images(text)
+        self.assertEqual(len(output), 1)
+        self.assertTupleEqual(output[0], ('![image](https://i.imgur.com/aKaOqIh.gif)', 'a.b'))
+
+    def test_extrac_markdown_images_nested(self):
+        text = "This [![image](https://i.imgur.com/aKaOqIh.gif)]"
+        output = extract_markdown_images(text)
+        self.assertEqual(len(output), 1)
+        self.assertTupleEqual(output[0], ('image', 'https://i.imgur.com/aKaOqIh.gif'))
+
+class TestSplitNodesImage(unittest.TestCase):
+    def test_split_simple_image(self):
+        node = TextNode("Test ![Image](cat.png)")
+        output = split_nodes_image([node])
+        self.assertEqual(len(output), 2)
+        self.assertEqual(str(output[0]), "TextNode(Test , normal, None)")
+        self.assertEqual(str(output[1]), "TextNode(Image, image, cat.png)")
         
 
 
-class TestSplitNodesLink(unittest.TestCase):
+class TestExtractMarkdownLinks(unittest.TestCase):
     def test_extract_markdown_links(self):
         text = "This is text with a link [to boot dev](https://www.boot.dev) and [to youtube](https://www.youtube.com/@bootdotdev)"
         output = extract_markdown_links(text)
@@ -77,12 +113,46 @@ class TestSplitNodesLink(unittest.TestCase):
         self.assertTupleEqual(output[0], ('to boot dev', 'https://www.boot.dev'))
         self.assertTupleEqual(output[1], ('to youtube', 'https://www.youtube.com/@bootdotdev'))
 
-    def test_extract_markdown_links_not_images(self):
+    def test_extract_markdown_links_not_links(self):
         text = "This has an ![image](https://i.imgur.com/aKaOqIh.gif) and a [link](https://www.boot.dev)"
         output = extract_markdown_links(text)
         self.assertEqual(len(output), 1)
         self.assertTupleEqual(output[0], ('link', 'https://www.boot.dev'))
 
+    def test_extract_markdown_links_no_alt(self):
+        text = "Test [](boot.jpg)"
+        output = extract_markdown_links(text)
+        self.assertEqual(len(output), 0)
+    
+    def test_extract_markdown_links_no_src(self):
+        text = "Test [alt]()"
+        output = extract_markdown_links(text)
+        self.assertEqual(len(output), 0)
+    
+    def test_extract_markdown_links_empty(self):
+        text = "Test []()"
+        output = extract_markdown_links(text)
+        self.assertEqual(len(output), 0)
+
+    def test_extrac_markdown_links_nested(self):
+        text = "This [[link](https://i.imgur.com/aKaOqIh.gif)](a.b)"
+        output = extract_markdown_links(text)
+        self.assertEqual(len(output), 1)
+        self.assertTupleEqual(output[0], ('[link](https://i.imgur.com/aKaOqIh.gif)', 'a.b'))
+
+    def test_extrac_markdown_links_nested(self):
+        text = "This [[link](https://i.imgur.com/aKaOqIh.gif)]"
+        output = extract_markdown_links(text)
+        self.assertEqual(len(output), 1)
+        self.assertTupleEqual(output[0], ('link', 'https://i.imgur.com/aKaOqIh.gif'))
+
+class TestSplitNodesLink(unittest.TestCase):
+    def test_split_simple_link(self):
+        node = TextNode("Test [Link](boot.dev)")
+        output = split_nodes_image([node])
+        self.assertEqual(len(output), 2)
+        self.assertEqual(str(output[0]), "TextNode(Test , normal, None)")
+        self.assertEqual(str(output[1]), "TextNode(Link, link, boot.dev)")
 
 if __name__ == "__main__":
     unittest.main()

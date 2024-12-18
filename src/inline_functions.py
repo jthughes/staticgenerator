@@ -1,5 +1,7 @@
 from nodes import *
 
+
+# If two delimiters in a row, don't want to split on them.
 def split_nodes_delimiter(old_nodes: list[TextNode], delimiter: str, text_type: TextType) -> list[TextNode]:
     new_nodes: list[TextNode] = []
     for node in old_nodes:
@@ -9,6 +11,7 @@ def split_nodes_delimiter(old_nodes: list[TextNode], delimiter: str, text_type: 
         search_string = node.text
         breaks = search_string.count(delimiter)
         fragments = search_string.split(delimiter)
+        print(f"\n\n delimiter: <{delimiter}> breaks: {breaks} fragments: {fragments} \n\n")
         index = 0
         
         # Need at least two breaks to have a valid section 
@@ -109,3 +112,16 @@ def split_nodes_link(old_nodes: list[TextNode]) -> list[TextNode]:
         if start_index < len(node.text):
             new_nodes.append(TextNode(node.text[start_index:], TextType.NORMAL))
     return new_nodes
+
+def text_to_textnodes(text: str) -> list[TextNode]:
+    nodes: list[TextNode] = [TextNode(text, TextType.NORMAL)]
+
+    nodes = split_nodes_delimiter(nodes, "```", TextType.CODE)
+    nodes = split_nodes_delimiter(nodes, "``", TextType.CODE)
+    nodes = split_nodes_delimiter(nodes, "`", TextType.CODE)
+    nodes = split_nodes_image(nodes)
+    nodes = split_nodes_link(nodes)
+    nodes = split_nodes_delimiter(nodes, "**", TextType.BOLD)
+    nodes = split_nodes_delimiter(nodes, "*", TextType.ITALIC)
+
+    return nodes

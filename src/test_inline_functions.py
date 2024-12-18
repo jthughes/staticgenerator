@@ -52,6 +52,26 @@ class TestSplitNodesDelimiter(unittest.TestCase):
         self.assertEqual(str(output[4]), "TextNode( , normal, None)")
         self.assertEqual(str(output[5]), "TextNode(bold, bold, None)")
 
+    def test_nested(self):
+        message = "Hi **there how *are* you?**"
+        input = TextNode(message, TextType.NORMAL)
+        output1 = split_nodes_delimiter([input], "**", TextType.BOLD)
+        output2 = split_nodes_delimiter(output1, "*", TextType.ITALIC)
+        self.assertEqual(len(output2), 2)
+        self.assertEqual(str(output2[0]), "TextNode(Hi , normal, None)")
+        self.assertEqual(str(output2[1]), "TextNode(there how *are* you?, bold, None)")
+
+    def test_nested_2(self):
+        message = "Hi *there how **are** you?*"
+        input = TextNode(message, TextType.NORMAL)
+        output1 = split_nodes_delimiter([input], "**", TextType.BOLD)
+        output2 = split_nodes_delimiter(output1, "*", TextType.ITALIC)
+        print(output2)
+        self.assertEqual(len(output2), 3)
+        self.assertEqual(str(output2[0]), "TextNode(Hi *there how , normal, None)")
+        self.assertEqual(str(output2[1]), "TextNode(are, bold, None)")
+        self.assertEqual(str(output2[2]), "TextNode( you?*, normal, None)")
+
 
 class TestExtractMarkdownImages(unittest.TestCase):
     def test_extract_markdown_images(self):
@@ -95,6 +115,7 @@ class TestExtractMarkdownImages(unittest.TestCase):
         self.assertEqual(len(output), 1)
         self.assertTupleEqual(output[0], ('image', 'https://i.imgur.com/aKaOqIh.gif'))
 
+
 class TestSplitNodesImage(unittest.TestCase):
     def test_split_simple_image(self):
         node = TextNode("![Image](cat.png)", TextType.NORMAL)
@@ -132,8 +153,6 @@ class TestSplitNodesImage(unittest.TestCase):
         output = split_nodes_image([node])
         self.assertEqual(len(output), 1)
         self.assertEqual(output[0], node)
-
-        
 
 
 class TestExtractMarkdownLinks(unittest.TestCase):
@@ -177,6 +196,7 @@ class TestExtractMarkdownLinks(unittest.TestCase):
         self.assertEqual(len(output), 1)
         self.assertTupleEqual(output[0], ('link', 'https://i.imgur.com/aKaOqIh.gif'))
 
+
 class TestSplitNodesLink(unittest.TestCase):
     def test_split_simple_link(self):
         node = TextNode("[Link](boot.dev)", TextType.NORMAL)
@@ -218,6 +238,49 @@ class TestSplitNodesLink(unittest.TestCase):
         output = split_nodes_link([node])
         self.assertEqual(len(output), 1)
         self.assertEqual(output[0], node)
+
+
+class TestTextToTextNodes(unittest.TestCase):
+    def test_boot_dev_example(self):
+        text = "This is **text** with an *italic* word and a `code block` and an ![obi wan image](https://i.imgur.com/fJRm4Vk.jpeg) and a [link](https://boot.dev)"
+        output = text_to_textnodes(text)
+        expected_output = [
+            TextNode("This is ", TextType.NORMAL),
+            TextNode("text", TextType.BOLD),
+            TextNode(" with an ", TextType.NORMAL),
+            TextNode("italic", TextType.ITALIC),
+            TextNode(" word and a ", TextType.NORMAL),
+            TextNode("code block", TextType.CODE),
+            TextNode(" and an ", TextType.NORMAL),
+            TextNode("obi wan image", TextType.IMAGE, "https://i.imgur.com/fJRm4Vk.jpeg"),
+            TextNode(" and a ", TextType.NORMAL),
+            TextNode("link", TextType.LINK, "https://boot.dev"),
+        ]
+        self.assertListEqual(output, expected_output)
+
+    def test_format_in_code(self):
+        text = "```*bold*```"
+        output = text_to_textnodes(text)
+        self.assertEqual(len(output), 1)
+        self.assertEqual(str(output[0]), "TextNode(*bold*, code, None)")
+
+    def test_code_blocks(self):
+        text = "``blah```blah2```blah3`"
+        output = text_to_textnodes(text)
+        print(output)
+        self.assertEqual(len(output), 3)
+        self.assertEqual(str(output[0]), "TextNode(``blah, normal, None)")
+        self.assertEqual(str(output[1]), "TextNode(blah2, code, None)")
+        self.assertEqual(str(output[2]), "TextNode(blah3`, normal, None)")
+
+    # This will need to change if supporting proper nesting in future
+    def test_overlap(self):
+        text = "*Hello [link*](boot.dev)"
+        output = text_to_textnodes(text)
+        self.assertEqual(len(output), 2)
+        self.assertEqual(str(output[0]), "TextNode(*Hello , normal, None)")
+        self.assertEqual(str(output[1]), "TextNode(link*, link, boot.dev)")
+
 
 if __name__ == "__main__":
     unittest.main()

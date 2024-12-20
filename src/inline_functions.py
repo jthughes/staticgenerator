@@ -1,44 +1,37 @@
 from nodes import *
 
-
-# If two delimiters in a row, don't want to split on them.
 def split_nodes_delimiter(old_nodes: list[TextNode], delimiter: str, text_type: TextType) -> list[TextNode]:
     new_nodes: list[TextNode] = []
     for node in old_nodes:
         if node.text_type != TextType.NORMAL:
             new_nodes.append(node)
             continue
-        search_string = node.text
-        breaks = search_string.count(delimiter)
-        fragments = search_string.split(delimiter)
-        print(f"\n\n delimiter: <{delimiter}> breaks: {breaks} fragments: {fragments} \n\n")
-        index = 0
-        
-        # Need at least two breaks to have a valid section 
-        while breaks >= 2:
-            # If doesn't start with a delimiter, have a normal section first
-            # If it does, split will give an empty string for fragments[0],
-            # so will need to clean either way
-            if not search_string.startswith(delimiter, index):
-                new_nodes.append(TextNode(fragments[0], TextType.NORMAL))
-            index += len(fragments[0])
-            fragments.pop(0)
-            index += len(delimiter)
-
-            new_nodes.append(TextNode(fragments[0], text_type))
-            index += len(fragments[0]) + len(delimiter)
-            fragments.pop(0)
-            breaks -= 2
-        # Insufficient remaining breaks to have properly tagged segement
-        remainder = search_string[index:]
-        if (len(remainder) > 0):
-            new_nodes.append(TextNode(remainder, TextType.NORMAL)) 
+        front = 0
+        ignored = 0
+        length = len(node.text)
+        while front < length:
+            start = node.text.find(delimiter, front + ignored)
+            end = node.text.find(delimiter, start + len(delimiter))
+            # If 0 or 1 found
+            if (start == -1 or end == -1):
+                new_nodes.append(TextNode(node.text[front:], TextType.NORMAL))
+                break
+            # If the delimiters bracket an empty string, ignore them.
+            if end == start + len(delimiter):
+                ignored += len(delimiter) * 2
+                continue
+            # We have a paired set of delimiters
+            if (start > front):
+                new_nodes.append(TextNode(node.text[front:start], TextType.NORMAL))
+            new_nodes.append(TextNode(node.text[start + len(delimiter):end], text_type))               
+            front = end + len(delimiter)
+            ignored = 0
     return new_nodes
 
 import re
 
 def extract_markdown_images(text: str) -> list[tuple]:
-    search = r"!\[([^\[\]]*)\]\(([^\(\)]+)\)"
+    search = r"!\[([^\]]*)\]\(([^\(\)]+)\)"
     matches = re.findall(search, text)
     return matches
 
@@ -59,7 +52,7 @@ def extract_markdown_links(text: str) -> list[tuple]:
     #             ^\(\)+    |
     # ])\]                  |
 
-    search = r"(?<!!)\[([^\[\]]+)\]\(([^\(\)]+)\)"
+    search = r"(?<!!)\[([^\]]+)\]\(([^\(\)]+)\)"
     matches = re.findall(search, text)
     return matches
 

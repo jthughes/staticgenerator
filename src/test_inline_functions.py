@@ -66,7 +66,6 @@ class TestSplitNodesDelimiter(unittest.TestCase):
         input = TextNode(message, TextType.NORMAL)
         output1 = split_nodes_delimiter([input], "**", TextType.BOLD)
         output2 = split_nodes_delimiter(output1, "*", TextType.ITALIC)
-        print(output2)
         self.assertEqual(len(output2), 3)
         self.assertEqual(str(output2[0]), "TextNode(Hi *there how , normal, None)")
         self.assertEqual(str(output2[1]), "TextNode(are, bold, None)")
@@ -107,9 +106,9 @@ class TestExtractMarkdownImages(unittest.TestCase):
         text = "This ![![image](https://i.imgur.com/aKaOqIh.gif)](a.b)"
         output = extract_markdown_images(text)
         self.assertEqual(len(output), 1)
-        self.assertTupleEqual(output[0], ('![image](https://i.imgur.com/aKaOqIh.gif)', 'a.b'))
+        self.assertTupleEqual(output[0], ('![image', 'https://i.imgur.com/aKaOqIh.gif'))
 
-    def test_extrac_markdown_images_nested(self):
+    def test_extrac_markdown_images_nested_2(self):
         text = "This [![image](https://i.imgur.com/aKaOqIh.gif)]"
         output = extract_markdown_images(text)
         self.assertEqual(len(output), 1)
@@ -126,7 +125,6 @@ class TestSplitNodesImage(unittest.TestCase):
     def test_split_simple_image_1(self):
         node = TextNode("Test ![Image](cat.png)", TextType.NORMAL)
         output = split_nodes_image([node])
-        print(f"\n\n{output}\n\n")
         self.assertEqual(len(output), 2)
         self.assertEqual(str(output[0]), "TextNode(Test , normal, None)")
         self.assertEqual(str(output[1]), "TextNode(Image, image, cat.png)")
@@ -188,13 +186,13 @@ class TestExtractMarkdownLinks(unittest.TestCase):
         text = "This [[link](https://i.imgur.com/aKaOqIh.gif)](a.b)"
         output = extract_markdown_links(text)
         self.assertEqual(len(output), 1)
-        self.assertTupleEqual(output[0], ('[link](https://i.imgur.com/aKaOqIh.gif)', 'a.b'))
+        self.assertTupleEqual(output[0], ('[link', 'https://i.imgur.com/aKaOqIh.gif'))
 
-    def test_extrac_markdown_links_nested(self):
+    def test_extrac_markdown_links_nested_2(self):
         text = "This [[link](https://i.imgur.com/aKaOqIh.gif)]"
         output = extract_markdown_links(text)
         self.assertEqual(len(output), 1)
-        self.assertTupleEqual(output[0], ('link', 'https://i.imgur.com/aKaOqIh.gif'))
+        self.assertTupleEqual(output[0], ('[link', 'https://i.imgur.com/aKaOqIh.gif'))
 
 
 class TestSplitNodesLink(unittest.TestCase):
@@ -267,7 +265,6 @@ class TestTextToTextNodes(unittest.TestCase):
     def test_code_blocks(self):
         text = "``blah```blah2```blah3`"
         output = text_to_textnodes(text)
-        print(output)
         self.assertEqual(len(output), 3)
         self.assertEqual(str(output[0]), "TextNode(``blah, normal, None)")
         self.assertEqual(str(output[1]), "TextNode(blah2, code, None)")
